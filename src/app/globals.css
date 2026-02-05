@@ -1,26 +1,190 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Acote Color Palette - Light Mode */
+  /* Elegant Sand & Taupe Theme */
+  --background: #FAFAF8;
+  --foreground: #1C1917;
+  --surface: #FFFFFF;
+  --surface-2: #F5F5F0;
+  --muted: #F0EDE8;
+  --muted-foreground: #78716C;
+  --border: #E7E5E0;
+
+  /* Primary - Elegant Taupe/Sand */
+  --primary: #8B7355;
+  --primary-hover: #7A6349;
+  --primary-active: #69543D;
+  --primary-foreground: #FFFFFF;
+
+  /* Secondary - Soft Sand */
+  --secondary: #FAF7F2;
+  --secondary-foreground: #44403C;
+  --secondary-hover: #F5F0E8;
+  --secondary-border: #E7E2D9;
+
+  /* Accent - Warm Beige */
+  --accent: #F5F0E8;
+  --accent-foreground: #44403C;
+
+  /* Premium Beige Gradient */
+  --gold-light: #A89078;
+  --gold-dark: #8B7355;
+  --gold-soft: #F5EDE5;
+
+  /* Success - Sage Green */
+  --success: #6B8E6B;
+  --success-soft: #E8F0E8;
+
+  /* Destructive */
+  --destructive: #C53030;
+  --destructive-foreground: #ffffff;
+
+  /* Ring */
+  --ring: #8B7355;
+  --radius: 0.75rem;
+}
+
+.dark {
+  /* Acote Color Palette - Dark Mode */
+  /* Elegant Sand & Taupe Theme - Dark */
+  --background: #0C0A09;
+  --foreground: #FAFAF9;
+  --surface: #1C1917;
+  --surface-2: #292524;
+  --muted: #292524;
+  --muted-foreground: #A8A29E;
+  --border: #3D3835;
+
+  /* Primary - Elegant Taupe/Sand */
+  --primary: #C4A882;
+  --primary-hover: #D4BC9A;
+  --primary-active: #E0CCB0;
+  --primary-foreground: #0C0A09;
+
+  /* Secondary - Soft Sand */
+  --secondary: #292524;
+  --secondary-foreground: #E7E5E4;
+  --secondary-hover: #3D3835;
+  --secondary-border: #57534E;
+
+  /* Accent */
+  --accent: #292524;
+  --accent-foreground: #FAFAF9;
+
+  /* Premium Beige */
+  --gold-light: #D4BC9A;
+  --gold-dark: #C4A882;
+  --gold-soft: #44403C;
+
+  /* Success - Sage Green */
+  --success: #7DA67D;
+  --success-soft: #292524;
+
+  /* Destructive */
+  --destructive: #E53E3E;
+  --destructive-foreground: #FAFAF9;
+
+  /* Ring */
+  --ring: #C4A882;
 }
 
 @theme inline {
+  /* Base */
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-border: var(--border);
+
+  /* Primary */
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-active: var(--primary-active);
+  --color-primary-foreground: var(--primary-foreground);
+
+  /* Secondary */
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary-hover: var(--secondary-hover);
+  --color-secondary-border: var(--secondary-border);
+
+  /* Accent */
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+
+  /* Gold/Beige Premium */
+  --color-gold-light: var(--gold-light);
+  --color-gold-dark: var(--gold-dark);
+  --color-gold-soft: var(--gold-soft);
+
+  /* Success */
+  --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
+
+  /* Destructive */
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+
+  /* Ring */
+  --color-ring: var(--ring);
+  --radius: var(--radius);
+  --font-sans: var(--font-roboto);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+* {
+  border-color: var(--border);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans), system-ui, sans-serif;
+  font-weight: 400;
+}
+
+/* Typography - Headings with Black/Bold weight */
+h1, h2, h3 {
+  font-weight: 900;
+  letter-spacing: -0.02em;
+}
+
+h4, h5, h6 {
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+/* Font weight utilities */
+.font-black {
+  font-weight: 900;
+}
+
+.font-bold {
+  font-weight: 700;
+}
+
+.font-medium {
+  font-weight: 500;
+}
+
+.font-normal {
+  font-weight: 400;
+}
+
+.font-light {
+  font-weight: 300;
+}
+
+/* Premium Beige Gradient */
+.bg-gold-gradient {
+  background: linear-gradient(135deg, var(--gold-light) 0%, var(--gold-dark) 100%);
+}
+
+.text-gold-gradient {
+  background: linear-gradient(135deg, var(--gold-light) 0%, var(--gold-dark) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
