@@ -317,7 +317,7 @@ export default function ServicePage() {
                       <div className="flex items-center gap-2">
                         <Star className="w-5 h-5 text-gold-dark fill-gold-dark" />
                         <span className="font-bold text-lg">
-                          {(service.createdBy.reputation.ratingAvg10 / 10).toFixed(1)}
+                          {service.createdBy.reputation.ratingAvg5.toFixed(1)}
                         </span>
                         <span className="text-muted-foreground text-sm">
                           ({service.createdBy.reputation.ratingCount} avis)

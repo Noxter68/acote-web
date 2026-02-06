@@ -333,6 +333,14 @@ export function Header() {
                             <User className="w-4 h-4 text-muted-foreground" />
                             <span className="text-sm">Mon profil</span>
                           </Link>
+                          <Link
+                            href="/dashboard"
+                            onClick={() => setUserMenuOpen(false)}
+                            className="flex items-center gap-3 px-4 py-2 hover:bg-muted/50 transition-colors cursor-pointer"
+                          >
+                            <LayoutDashboard className="w-4 h-4 text-muted-foreground" />
+                            <span className="text-sm">Dashboard</span>
+                          </Link>
                           {user.isBusiness ? (
                             <Link
                               href="/business/dashboard"
@@ -343,16 +351,6 @@ export function Header() {
                               <span className="text-sm">Mon entreprise</span>
                             </Link>
                           ) : (
-                            <Link
-                              href="/dashboard"
-                              onClick={() => setUserMenuOpen(false)}
-                              className="flex items-center gap-3 px-4 py-2 hover:bg-muted/50 transition-colors cursor-pointer"
-                            >
-                              <LayoutDashboard className="w-4 h-4 text-muted-foreground" />
-                              <span className="text-sm">Dashboard</span>
-                            </Link>
-                          )}
-                          {!user.isBusiness && (
                             <Link
                               href="/dashboard/services/new"
                               onClick={() => setUserMenuOpen(false)}
@@ -550,14 +548,25 @@ export function Header() {
                                 <LayoutDashboard className="w-5 h-5 text-muted-foreground" />
                                 <span className="text-sm font-medium">Dashboard</span>
                               </Link>
-                              <Link
-                                href="/dashboard/services/new"
-                                onClick={closeMobileMenu}
-                                className="flex items-center gap-4 p-4 rounded-2xl hover:bg-muted/50 transition-colors"
-                              >
-                                <Plus className="w-5 h-5 text-muted-foreground" />
-                                <span className="text-sm font-medium">Créer un service</span>
-                              </Link>
+                              {user.isBusiness ? (
+                                <Link
+                                  href="/business/dashboard"
+                                  onClick={closeMobileMenu}
+                                  className="flex items-center gap-4 p-4 rounded-2xl hover:bg-muted/50 transition-colors"
+                                >
+                                  <Building2 className="w-5 h-5 text-muted-foreground" />
+                                  <span className="text-sm font-medium">Mon entreprise</span>
+                                </Link>
+                              ) : (
+                                <Link
+                                  href="/dashboard/services/new"
+                                  onClick={closeMobileMenu}
+                                  className="flex items-center gap-4 p-4 rounded-2xl hover:bg-muted/50 transition-colors"
+                                >
+                                  <Plus className="w-5 h-5 text-muted-foreground" />
+                                  <span className="text-sm font-medium">Créer un service</span>
+                                </Link>
+                              )}
                               <Link
                                 href="/settings"
                                 onClick={closeMobileMenu}

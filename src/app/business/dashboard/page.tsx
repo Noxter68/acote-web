@@ -27,7 +27,7 @@ import { Badge } from '@/components/ui/badge';
 import { PageLoader } from '@/components/ui/spinner';
 import { useToast } from '@/components/ui/toast';
 import { formatPrice } from '@/lib/utils';
-import { Business, Employee, BusinessService } from '@/types';
+import { Business, Employee, BusinessService, Booking, BookingStatus } from '@/types';
 
 export default function BusinessDashboardPage() {
   const { user, isLoading: authLoading } = useAuth();
@@ -40,6 +40,58 @@ export default function BusinessDashboardPage() {
     queryKey: ['my-business'],
     queryFn: () => api.getMyBusiness(),
     enabled: !!user,
+    refetchOnMount: 'always',
+  });
+
+  // Réservations reçues (en tant que provider)
+  const { data: bookings, isLoading: bookingsLoading } = useQuery({
+    queryKey: ['business-bookings'],
+    queryFn: () => api.getMyBookings('provider'),
+    enabled: !!user,
+  });
+
+  // Filtrer uniquement les bookings business
+  const businessBookings = bookings?.filter(b => b.businessServiceId) || [];
+  const pendingBookings = businessBookings.filter(b => b.status === 'PENDING');
+
+  const statusLabels: Record<BookingStatus, string> = {
+    PENDING: 'En attente',
+    ACCEPTED: 'Confirmé',
+    IN_PROGRESS: 'En cours',
+    COMPLETED: 'Terminé',
+    CANCELED: 'Annulé',
+    DISPUTED: 'Litige',
+  };
+
+  const statusColors: Record<BookingStatus, string> = {
+    PENDING: 'bg-amber-50 text-amber-700 dark:bg-amber-900/20 dark:text-amber-400',
+    ACCEPTED: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-400',
+    IN_PROGRESS: 'bg-violet-50 text-violet-700 dark:bg-violet-900/20 dark:text-violet-400',
+    COMPLETED: 'bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-400',
+    CANCELED: 'bg-stone-100 text-stone-600 dark:bg-stone-800/50 dark:text-stone-400',
+    DISPUTED: 'bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-400',
+  };
+
+  const acceptBookingMutation = useMutation({
+    mutationFn: (id: string) => api.acceptBooking(id),
+    onSuccess: () => {
+      success('Réservation confirmée');
+      queryClient.invalidateQueries({ queryKey: ['business-bookings'] });
+      queryClient.invalidateQueries({ queryKey: ['my-reservations'] });
+      queryClient.invalidateQueries({ queryKey: ['bookings'] });
+    },
+    onError: () => showError('Erreur lors de la confirmation'),
+  });
+
+  const cancelBookingMutation = useMutation({
+    mutationFn: (id: string) => api.cancelBooking(id),
+    onSuccess: () => {
+      success('Réservation annulée');
+      queryClient.invalidateQueries({ queryKey: ['business-bookings'] });
+      queryClient.invalidateQueries({ queryKey: ['my-reservations'] });
+      queryClient.invalidateQueries({ queryKey: ['bookings'] });
+    },
+    onError: () => showError('Erreur lors de l\'annulation'),
   });
 
   const deleteServiceMutation = useMutation({
@@ -197,8 +249,8 @@ export default function BusinessDashboardPage() {
                     <Calendar className="w-5 h-5 text-green-600 dark:text-green-400" />
                   </div>
                 </div>
-                <div className="text-2xl font-bold">0</div>
-                <div className="text-sm text-muted-foreground">RDV ce mois</div>
+                <div className="text-2xl font-bold">{businessBookings.length}</div>
+                <div className="text-sm text-muted-foreground">Réservations</div>
               </div>
               <div className="bg-surface border border-border rounded-2xl p-5">
                 <div className="flex items-center gap-3 mb-3">
@@ -369,14 +421,103 @@ export default function BusinessDashboardPage() {
           >
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-xl font-bold">Réservations</h2>
+              {pendingBookings.length > 0 && (
+                <Badge className="bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
+                  {pendingBookings.length} en attente
+                </Badge>
+              )}
             </div>
 
-            <div className="bg-surface border border-border rounded-2xl p-8 text-center">
-              <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
-                <Calendar className="w-8 h-8 text-muted-foreground" />
+            {bookingsLoading ? (
+              <div className="space-y-4">
+                {[...Array(3)].map((_, i) => (
+                  <div key={i} className="h-24 bg-surface border border-border rounded-2xl animate-pulse" />
+                ))}
               </div>
-              <p className="text-muted-foreground">Aucune réservation pour le moment</p>
-            </div>
+            ) : businessBookings.length === 0 ? (
+              <div className="bg-surface border border-border rounded-2xl p-8 text-center">
+                <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Calendar className="w-8 h-8 text-muted-foreground" />
+                </div>
+                <p className="text-muted-foreground">Aucune réservation pour le moment</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {businessBookings.map((booking) => (
+                  <div
+                    key={booking.id}
+                    className="bg-surface border border-border rounded-2xl p-5"
+                  >
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-2">
+                          <h3 className="font-medium">
+                            {booking.businessService?.name || 'Service'}
+                          </h3>
+                          <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${statusColors[booking.status]}`}>
+                            {statusLabels[booking.status]}
+                          </span>
+                        </div>
+                        <div className="text-sm text-muted-foreground space-y-1">
+                          <p>
+                            <span className="font-medium text-foreground">Client:</span>{' '}
+                            {booking.requester?.profile?.displayName || 'Anonyme'}
+                          </p>
+                          {booking.employee && (
+                            <p>
+                              <span className="font-medium text-foreground">Avec:</span>{' '}
+                              {booking.employee.firstName} {booking.employee.lastName}
+                            </p>
+                          )}
+                          {booking.scheduledAt && (
+                            <p className="flex items-center gap-1">
+                              <Calendar className="w-3.5 h-3.5" />
+                              {new Date(booking.scheduledAt).toLocaleDateString('fr-FR', {
+                                weekday: 'short',
+                                day: 'numeric',
+                                month: 'short',
+                              })}
+                              {' à '}
+                              {new Date(booking.scheduledAt).toLocaleTimeString('fr-FR', {
+                                hour: '2-digit',
+                                minute: '2-digit',
+                              })}
+                            </p>
+                          )}
+                          {booking.agreedPriceCents && (
+                            <p className="font-semibold text-primary">
+                              {formatPrice(booking.agreedPriceCents)}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+
+                      {booking.status === 'PENDING' && (
+                        <div className="flex gap-2">
+                          <Button
+                            size="sm"
+                            className="rounded-full"
+                            onClick={() => acceptBookingMutation.mutate(booking.id)}
+                            disabled={acceptBookingMutation.isPending}
+                          >
+                            Confirmer
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="rounded-full"
+                            onClick={() => cancelBookingMutation.mutate(booking.id)}
+                            disabled={cancelBookingMutation.isPending}
+                          >
+                            Refuser
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </motion.div>
         )}
       </AnimatePresence>

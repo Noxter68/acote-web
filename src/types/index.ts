@@ -31,7 +31,7 @@ export interface Profile {
 
 export interface UserReputation {
   userId: string;
-  ratingAvg10: number;
+  ratingAvg5: number;
   ratingCount: number;
   xp: number;
   level: number;
@@ -99,8 +99,17 @@ export interface Service {
 // Booking
 export interface Booking {
   id: string;
-  serviceId: string;
+  // P2P booking
+  serviceId?: string;
   service?: Service;
+  // Business booking
+  businessServiceId?: string;
+  businessService?: BusinessService & {
+    business?: Business;
+  };
+  employeeId?: string;
+  employee?: Employee;
+  // Common fields
   requesterId: string;
   requester?: {
     id: string;
@@ -115,6 +124,7 @@ export interface Booking {
   agreedPriceCents?: number;
   scheduledAt?: string;
   completedAt?: string;
+  notes?: string;
   reviews?: Review[];
   createdAt: string;
   updatedAt: string;
@@ -133,6 +143,13 @@ export interface Review {
   type: ReviewType;
   score: number;
   comment?: string;
+  reply?: string;
+  repliedAt?: string;
+  booking?: {
+    service?: { title: string };
+    businessService?: { name: string };
+    employee?: { firstName: string; lastName: string };
+  };
   createdAt: string;
 }
 

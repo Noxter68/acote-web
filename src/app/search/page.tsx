@@ -111,7 +111,7 @@ function BusinessCard({ business }: { business: Business }) {
               {business.owner?.reputation && business.owner.reputation.ratingCount > 0 && (
                 <span className="flex items-center gap-1">
                   <Star className="w-3.5 h-3.5 text-yellow-500" />
-                  {(business.owner.reputation.ratingAvg10 / 10).toFixed(1)}
+                  {business.owner.reputation.ratingAvg5.toFixed(1)}
                 </span>
               )}
             </div>

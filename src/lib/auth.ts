@@ -5,7 +5,7 @@ const REFRESH_TOKEN_KEY = 'refreshToken';
 
 export interface UserReputation {
   userId: string;
-  ratingAvg10: number;
+  ratingAvg5: number;
   ratingCount: number;
   xp: number;
   level: number;

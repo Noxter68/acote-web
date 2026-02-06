@@ -58,7 +58,7 @@ export function ServiceCard({ service }: ServiceCardProps) {
               </span>
               {service.createdBy?.reputation && (
                 <span className="text-muted-foreground">
-                  ★ {service.createdBy.reputation.ratingAvg10.toFixed(1)}
+                  ★ {service.createdBy.reputation.ratingAvg5.toFixed(1)}
                 </span>
               )}
             </div>

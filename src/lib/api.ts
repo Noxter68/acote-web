@@ -151,6 +151,17 @@ class ApiClient {
     return this.request<import('@/types').Review[]>(`/reviews/user/${userId}`);
   }
 
+  async getBusinessReviews(businessId: string) {
+    return this.request<import('@/types').Review[]>(`/reviews/business/${businessId}`);
+  }
+
+  async replyToReview(reviewId: string, reply: string) {
+    return this.request<import('@/types').Review>(`/reviews/${reviewId}/reply`, {
+      method: 'PATCH',
+      body: JSON.stringify({ reply }),
+    });
+  }
+
   // Categories
   async getCategories() {
     return this.request<import('@/types').Category[]>('/categories');
@@ -314,6 +325,25 @@ class ApiClient {
     return this.request<{ slots: { time: string; available: boolean }[] }>(
       `/employees/slots?${params}`
     );
+  }
+
+  async getAvailableSlotsMultipleDays(
+    employeeId: string,
+    businessServiceId: string,
+    dates: string[]
+  ) {
+    // Fetch slots for multiple dates in parallel
+    const results = await Promise.all(
+      dates.map(async (date) => {
+        try {
+          const result = await this.getAvailableSlots(employeeId, businessServiceId, date);
+          return { date, slots: result.slots };
+        } catch {
+          return { date, slots: [] };
+        }
+      })
+    );
+    return results;
   }
 
   // Business Booking

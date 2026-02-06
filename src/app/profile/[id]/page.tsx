@@ -62,8 +62,8 @@ export default function ProfilePage() {
   const stats = [
     {
       label: 'Note moyenne',
-      value: user.reputation ? user.reputation.ratingAvg10.toFixed(1) : '-',
-      suffix: '/10',
+      value: user.reputation?.ratingAvg5 ? user.reputation.ratingAvg5.toFixed(1) : '-',
+      suffix: '/5',
       icon: Star,
       color: 'text-primary',
     },
@@ -253,7 +253,7 @@ export default function ProfilePage() {
                         </p>
                         <div className="flex items-center gap-1 bg-primary/10 px-2.5 py-1 rounded-full shrink-0">
                           <Star className="w-4 h-4 text-primary fill-primary" />
-                          <span className="font-bold text-primary">{review.score}/10</span>
+                          <span className="font-bold text-primary">{review.score}/5</span>
                         </div>
                       </div>
 
