@@ -129,9 +129,13 @@ class ApiClient {
     });
   }
 
-  async getMyBookings(role?: 'requester' | 'provider') {
-    const params = role ? `?role=${role}` : '';
-    return this.request<import('@/types').Booking[]>(`/bookings/me${params}`);
+  async getMyBookings(role?: 'requester' | 'provider', from?: string, to?: string) {
+    const params = new URLSearchParams();
+    if (role) params.append('role', role);
+    if (from) params.append('from', from);
+    if (to) params.append('to', to);
+    const queryString = params.toString();
+    return this.request<import('@/types').Booking[]>(`/bookings/me${queryString ? `?${queryString}` : ''}`);
   }
 
   // Reviews

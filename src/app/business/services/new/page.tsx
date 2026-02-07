@@ -70,7 +70,7 @@ export default function NewBusinessServicePage() {
         businessCategoryId: formData.businessCategoryId || undefined,
       }),
     onSuccess: () => {
-      success('Service créé avec succès !');
+      success('Prestation créée avec succès !');
       queryClient.invalidateQueries({ queryKey: ['my-business'] });
       router.push('/business/dashboard');
     },
@@ -125,7 +125,7 @@ export default function NewBusinessServicePage() {
       <div className="container mx-auto px-4 py-8 pt-24 text-center">
         <h1 className="text-2xl font-bold mb-4">Connectez-vous</h1>
         <p className="text-muted-foreground mb-4">
-          Vous devez être connecté pour créer un service.
+          Vous devez être connecté pour créer une prestation.
         </p>
         <Link href="/auth/login">
           <Button>Se connecter</Button>
@@ -144,9 +144,9 @@ export default function NewBusinessServicePage() {
           </Button>
         </Link>
         <div>
-          <h1 className="text-2xl font-bold">Nouveau service</h1>
+          <h1 className="text-2xl font-bold">Nouvelle prestation</h1>
           <p className="text-muted-foreground text-sm">
-            Ajoutez un service à votre catalogue
+            Ajoutez une prestation à votre catalogue
           </p>
         </div>
       </div>
@@ -250,7 +250,7 @@ export default function NewBusinessServicePage() {
             className="rounded-full"
           >
             <Check className="w-4 h-4 mr-2" />
-            Créer le service
+            Créer la prestation
           </Button>
         )}
       </div>
@@ -274,15 +274,15 @@ function StepInfo({
         <div className="w-14 h-14 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
           <FileText className="w-7 h-7 text-primary" />
         </div>
-        <h2 className="text-xl font-bold mb-1">Informations du service</h2>
+        <h2 className="text-xl font-bold mb-1">Informations de la prestation</h2>
         <p className="text-muted-foreground text-sm">
-          Décrivez le service que vous proposez
+          Décrivez la prestation que vous proposez
         </p>
       </div>
 
       <div>
         <label className="text-sm font-medium mb-2 block">
-          Nom du service *
+          Nom de la prestation *
         </label>
         <Input
           value={name}
@@ -302,7 +302,7 @@ function StepInfo({
         <textarea
           value={description}
           onChange={(e) => onChange({ description: e.target.value })}
-          placeholder="Décrivez ce que comprend ce service..."
+          placeholder="Décrivez ce que comprend cette prestation..."
           maxLength={500}
           rows={4}
           className="flex w-full rounded-xl border border-border bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 resize-none"
@@ -332,7 +332,7 @@ function StepPricing({
         </div>
         <h2 className="text-xl font-bold mb-1">Tarification</h2>
         <p className="text-muted-foreground text-sm">
-          Définissez le prix et la durée du service
+          Définissez le prix et la durée de la prestation
         </p>
       </div>
 
