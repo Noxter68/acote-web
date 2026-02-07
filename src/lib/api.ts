@@ -262,6 +262,7 @@ class ApiClient {
     priceCents: number;
     durationMinutes: number;
     categoryId?: string;
+    businessCategoryId?: string;
   }) {
     return this.request<import('@/types').BusinessService>('/business/services', {
       method: 'POST',
@@ -299,7 +300,20 @@ class ApiClient {
     });
   }
 
-  async updateEmployee(id: string, data: Partial<import('@/types').Employee>) {
+  async getEmployee(id: string) {
+    return this.request<import('@/types').Employee>(`/employees/${id}`);
+  }
+
+  async updateEmployee(id: string, data: {
+    firstName?: string;
+    lastName?: string;
+    email?: string;
+    phone?: string;
+    role?: string;
+    bio?: string;
+    availabilities?: { dayOfWeek: number; startTime: string; endTime: string }[];
+    serviceIds?: string[];
+  }) {
     return this.request<import('@/types').Employee>(`/employees/${id}`, {
       method: 'PUT',
       body: JSON.stringify(data),
@@ -356,6 +370,52 @@ class ApiClient {
     return this.request<import('@/types').Booking>('/bookings', {
       method: 'POST',
       body: JSON.stringify(data),
+    });
+  }
+
+  // Business Hours
+  async getBusinessHours(slug: string) {
+    return this.request<import('@/types').BusinessHours[]>(`/business/${slug}/hours`);
+  }
+
+  async getMyBusinessHours() {
+    return this.request<import('@/types').BusinessHours[]>('/business/hours/mine');
+  }
+
+  async updateBusinessHours(hours: {
+    dayOfWeek: number;
+    startTime: string;
+    endTime: string;
+    isClosed?: boolean;
+  }[]) {
+    return this.request<import('@/types').BusinessHours[]>('/business/hours', {
+      method: 'PUT',
+      body: JSON.stringify({ hours }),
+    });
+  }
+
+  // Business Categories
+  async getMyBusinessCategories() {
+    return this.request<import('@/types').BusinessCategory[]>('/business/categories/mine');
+  }
+
+  async createBusinessCategory(data: { name: string; sortOrder?: number }) {
+    return this.request<import('@/types').BusinessCategory>('/business/categories', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async updateBusinessCategory(id: string, data: { name?: string; sortOrder?: number }) {
+    return this.request<import('@/types').BusinessCategory>(`/business/categories/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async deleteBusinessCategory(id: string) {
+    return this.request<{ success: boolean }>(`/business/categories/${id}`, {
+      method: 'DELETE',
     });
   }
 }

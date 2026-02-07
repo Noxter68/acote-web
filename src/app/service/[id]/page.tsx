@@ -41,7 +41,7 @@ export default function ServicePage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center pt-24">
         <PageLoader text="Chargement du service..." />
       </div>
     );

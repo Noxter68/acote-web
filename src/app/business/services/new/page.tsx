@@ -21,7 +21,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { PageLoader } from '@/components/ui/spinner';
 import { useToast } from '@/components/ui/toast';
-import { Category } from '@/types';
+import { Category, BusinessCategory } from '@/types';
 
 type Step = 1 | 2 | 3;
 
@@ -30,7 +30,7 @@ interface FormData {
   description: string;
   priceCents: number | null;
   durationMinutes: number | null;
-  categoryId: string | null;
+  businessCategoryId: string | null;
 }
 
 const steps = [
@@ -51,12 +51,13 @@ export default function NewBusinessServicePage() {
     description: '',
     priceCents: null,
     durationMinutes: null,
-    categoryId: null,
+    businessCategoryId: null,
   });
 
-  const { data: categories, isLoading: categoriesLoading } = useQuery({
-    queryKey: ['categories'],
-    queryFn: () => api.getCategories(),
+  const { data: business, isLoading: businessLoading } = useQuery({
+    queryKey: ['my-business'],
+    queryFn: () => api.getMyBusiness(),
+    enabled: !!user,
   });
 
   const createMutation = useMutation({
@@ -66,7 +67,7 @@ export default function NewBusinessServicePage() {
         description: formData.description || undefined,
         priceCents: formData.priceCents || 0,
         durationMinutes: formData.durationMinutes || 30,
-        categoryId: formData.categoryId || undefined,
+        businessCategoryId: formData.businessCategoryId || undefined,
       }),
     onSuccess: () => {
       success('Service créé avec succès !');
@@ -214,10 +215,10 @@ export default function NewBusinessServicePage() {
             )}
             {step === 3 && (
               <StepCategory
-                categories={categories || []}
-                loading={categoriesLoading}
-                selectedId={formData.categoryId}
-                onChange={(categoryId) => updateForm({ categoryId })}
+                categories={business?.categories || []}
+                loading={businessLoading}
+                selectedId={formData.businessCategoryId}
+                onChange={(businessCategoryId) => updateForm({ businessCategoryId })}
               />
             )}
           </motion.div>
@@ -405,13 +406,11 @@ function StepCategory({
   selectedId,
   onChange,
 }: {
-  categories: Category[];
+  categories: BusinessCategory[];
   loading: boolean;
   selectedId: string | null;
   onChange: (id: string | null) => void;
 }) {
-  const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
-
   if (loading) {
     return <PageLoader text="Chargement des catégories..." />;
   }
@@ -441,63 +440,25 @@ function StepCategory({
           <span className="font-medium text-muted-foreground">Sans catégorie</span>
         </motion.button>
 
-        {categories.map((category) => (
-          <div key={category.id}>
+        {categories.length === 0 ? (
+          <p className="text-sm text-muted-foreground text-center py-4">
+            Aucune catégorie créée. Vous pouvez en créer dans les paramètres du dashboard.
+          </p>
+        ) : (
+          categories.map((category) => (
             <motion.button
-              onClick={() => {
-                if (category.children?.length) {
-                  setExpandedCategory(
-                    expandedCategory === category.id ? null : category.id
-                  );
-                } else {
-                  onChange(category.id);
-                }
-              }}
+              key={category.id}
+              onClick={() => onChange(category.id)}
               className={`w-full p-4 rounded-xl border text-left transition-colors cursor-pointer ${
                 selectedId === category.id
                   ? 'border-primary bg-primary/5'
                   : 'border-border hover:border-primary/50'
               }`}
             >
-              <div className="flex items-center justify-between">
-                <span className="font-medium">{category.name}</span>
-                {category.children?.length ? (
-                  <ChevronRight
-                    className={`w-4 h-4 transition-transform ${
-                      expandedCategory === category.id ? 'rotate-90' : ''
-                    }`}
-                  />
-                ) : null}
-              </div>
+              <span className="font-medium">{category.name}</span>
             </motion.button>
-
-            <AnimatePresence>
-              {expandedCategory === category.id && category.children?.length && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: 'auto' }}
-                  exit={{ opacity: 0, height: 0 }}
-                  className="ml-4 mt-2 space-y-2"
-                >
-                  {category.children.map((child) => (
-                    <motion.button
-                      key={child.id}
-                      whileHover={{ x: 4 }}
-                      onClick={() => onChange(child.id)}
-                      className={`w-full p-3 rounded-xl border text-left transition-colors cursor-pointer ${
-                        selectedId === child.id
-                          ? 'border-primary bg-primary/5'
-                          : 'border-border hover:border-primary/50'
-                      }`}
-                    >
-                      {child.name}
-                    </motion.button>
-                  ))}
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-        ))}
+          ))
+        )}
       </div>
     </div>
   );

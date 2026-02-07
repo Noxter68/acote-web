@@ -27,14 +27,14 @@ import { Badge } from '@/components/ui/badge';
 import { PageLoader } from '@/components/ui/spinner';
 import { useToast } from '@/components/ui/toast';
 import { formatPrice } from '@/lib/utils';
-import { Business, Employee, BusinessService, Booking, BookingStatus } from '@/types';
+import { Business, Employee, BusinessService, Booking, BookingStatus, BusinessHours, BusinessCategory } from '@/types';
 
 export default function BusinessDashboardPage() {
   const { user, isLoading: authLoading } = useAuth();
   const { success, error: showError } = useToast();
   const queryClient = useQueryClient();
 
-  const [activeTab, setActiveTab] = useState<'overview' | 'services' | 'employees' | 'bookings'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'services' | 'employees' | 'bookings' | 'settings'>('overview');
 
   const { data: business, isLoading } = useQuery({
     queryKey: ['my-business'],
@@ -157,6 +157,7 @@ export default function BusinessDashboardPage() {
     { id: 'services', label: 'Services', icon: Scissors },
     { id: 'employees', label: 'Équipe', icon: Users },
     { id: 'bookings', label: 'Réservations', icon: Calendar },
+    { id: 'settings', label: 'Paramètres', icon: Settings },
   ] as const;
 
   return (
@@ -357,7 +358,7 @@ export default function BusinessDashboardPage() {
             ) : (
               <div className="space-y-4">
                 {business.services?.map((service) => (
-                  <ServiceCard
+                  <DashboardServiceCard
                     key={service.id}
                     service={service}
                     onDelete={() => deleteServiceMutation.mutate(service.id)}
@@ -520,12 +521,310 @@ export default function BusinessDashboardPage() {
             )}
           </motion.div>
         )}
+
+        {activeTab === 'settings' && (
+          <motion.div
+            key="settings"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="space-y-6"
+          >
+            <h2 className="text-xl font-bold mb-6">Paramètres</h2>
+
+            {/* Business Hours */}
+            <BusinessHoursEditor business={business} />
+
+            {/* Business Categories */}
+            <BusinessCategoriesEditor business={business} />
+          </motion.div>
+        )}
       </AnimatePresence>
     </div>
   );
 }
 
-function ServiceCard({ service, onDelete }: { service: BusinessService; onDelete: () => void }) {
+// Business Hours Editor Component
+const DAY_NAMES = ['Dimanche', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'];
+
+function BusinessHoursEditor({ business }: { business: Business }) {
+  const { success, error: showError } = useToast();
+  const queryClient = useQueryClient();
+
+  // Initialize hours state from business.hours or with defaults
+  const getInitialHours = () => {
+    const defaultHours = [1, 2, 3, 4, 5, 6, 0].map((dayOfWeek) => {
+      const existing = business.hours?.find((h) => h.dayOfWeek === dayOfWeek);
+      return {
+        dayOfWeek,
+        startTime: existing?.startTime || '09:00',
+        endTime: existing?.endTime || '18:00',
+        isClosed: existing?.isClosed ?? (dayOfWeek === 0), // Closed on Sunday by default
+      };
+    });
+    return defaultHours;
+  };
+
+  const [hours, setHours] = useState(getInitialHours);
+
+  const updateHoursMutation = useMutation({
+    mutationFn: (data: { dayOfWeek: number; startTime: string; endTime: string; isClosed?: boolean }[]) =>
+      api.updateBusinessHours(data),
+    onSuccess: () => {
+      success('Horaires mis à jour');
+      queryClient.invalidateQueries({ queryKey: ['my-business'] });
+    },
+    onError: () => showError('Erreur lors de la mise à jour'),
+  });
+
+  const handleSave = () => {
+    updateHoursMutation.mutate(hours);
+  };
+
+  const updateHour = (dayOfWeek: number, field: 'startTime' | 'endTime' | 'isClosed', value: string | boolean) => {
+    setHours((prev) =>
+      prev.map((h) =>
+        h.dayOfWeek === dayOfWeek ? { ...h, [field]: value } : h
+      )
+    );
+  };
+
+  return (
+    <div className="bg-surface border border-border rounded-2xl p-6">
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h3 className="font-semibold flex items-center gap-2">
+            <Clock className="w-5 h-5" />
+            Horaires d'ouverture
+          </h3>
+          <p className="text-sm text-muted-foreground mt-1">
+            Définissez les horaires d'ouverture de votre établissement
+          </p>
+        </div>
+        <Button
+          onClick={handleSave}
+          disabled={updateHoursMutation.isPending}
+          className="rounded-full"
+        >
+          {updateHoursMutation.isPending ? 'Enregistrement...' : 'Enregistrer'}
+        </Button>
+      </div>
+
+      <div className="space-y-3">
+        {hours.map((hour) => (
+          <div
+            key={hour.dayOfWeek}
+            className={`flex items-center gap-4 p-3 rounded-xl ${
+              hour.isClosed ? 'bg-muted/50' : 'bg-background'
+            }`}
+          >
+            <div className="w-24 font-medium text-sm">
+              {DAY_NAMES[hour.dayOfWeek]}
+            </div>
+
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={!hour.isClosed}
+                onChange={(e) => updateHour(hour.dayOfWeek, 'isClosed', !e.target.checked)}
+                className="w-4 h-4 rounded border-border text-primary focus:ring-primary"
+              />
+              <span className="text-sm text-muted-foreground">Ouvert</span>
+            </label>
+
+            {!hour.isClosed && (
+              <>
+                <input
+                  type="time"
+                  value={hour.startTime}
+                  onChange={(e) => updateHour(hour.dayOfWeek, 'startTime', e.target.value)}
+                  className="px-3 py-1.5 text-sm border border-border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-primary/20"
+                />
+                <span className="text-muted-foreground">à</span>
+                <input
+                  type="time"
+                  value={hour.endTime}
+                  onChange={(e) => updateHour(hour.dayOfWeek, 'endTime', e.target.value)}
+                  className="px-3 py-1.5 text-sm border border-border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-primary/20"
+                />
+              </>
+            )}
+
+            {hour.isClosed && (
+              <span className="text-sm text-muted-foreground italic">Fermé</span>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// Business Categories Editor Component
+function BusinessCategoriesEditor({ business }: { business: Business }) {
+  const { success, error: showError } = useToast();
+  const queryClient = useQueryClient();
+  const [newCategoryName, setNewCategoryName] = useState('');
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingName, setEditingName] = useState('');
+
+  const createCategoryMutation = useMutation({
+    mutationFn: (name: string) => api.createBusinessCategory({ name }),
+    onSuccess: () => {
+      success('Catégorie créée');
+      setNewCategoryName('');
+      queryClient.invalidateQueries({ queryKey: ['my-business'] });
+    },
+    onError: () => showError('Erreur lors de la création'),
+  });
+
+  const updateCategoryMutation = useMutation({
+    mutationFn: ({ id, name }: { id: string; name: string }) =>
+      api.updateBusinessCategory(id, { name }),
+    onSuccess: () => {
+      success('Catégorie modifiée');
+      setEditingId(null);
+      queryClient.invalidateQueries({ queryKey: ['my-business'] });
+    },
+    onError: () => showError('Erreur lors de la modification'),
+  });
+
+  const deleteCategoryMutation = useMutation({
+    mutationFn: (id: string) => api.deleteBusinessCategory(id),
+    onSuccess: () => {
+      success('Catégorie supprimée');
+      queryClient.invalidateQueries({ queryKey: ['my-business'] });
+    },
+    onError: () => showError('Erreur lors de la suppression'),
+  });
+
+  const handleCreate = () => {
+    if (newCategoryName.trim()) {
+      createCategoryMutation.mutate(newCategoryName.trim());
+    }
+  };
+
+  const handleUpdate = (id: string) => {
+    if (editingName.trim()) {
+      updateCategoryMutation.mutate({ id, name: editingName.trim() });
+    }
+  };
+
+  const startEditing = (category: { id: string; name: string }) => {
+    setEditingId(category.id);
+    setEditingName(category.name);
+  };
+
+  return (
+    <div className="bg-surface border border-border rounded-2xl p-6">
+      <div className="mb-6">
+        <h3 className="font-semibold flex items-center gap-2">
+          <Scissors className="w-5 h-5" />
+          Catégories de services
+        </h3>
+        <p className="text-sm text-muted-foreground mt-1">
+          Organisez vos prestations par catégorie (ex: Ongles, Extensions de cils, etc.)
+        </p>
+      </div>
+
+      {/* Add new category */}
+      <div className="flex gap-2 mb-4">
+        <input
+          type="text"
+          value={newCategoryName}
+          onChange={(e) => setNewCategoryName(e.target.value)}
+          placeholder="Nouvelle catégorie..."
+          className="flex-1 px-3 py-2 text-sm border border-border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-primary/20"
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') handleCreate();
+          }}
+        />
+        <Button
+          onClick={handleCreate}
+          disabled={!newCategoryName.trim() || createCategoryMutation.isPending}
+          className="rounded-full"
+        >
+          <Plus className="w-4 h-4 mr-1" />
+          Ajouter
+        </Button>
+      </div>
+
+      {/* Categories list */}
+      {business.categories && business.categories.length > 0 ? (
+        <div className="space-y-2">
+          {business.categories.map((category) => (
+            <div
+              key={category.id}
+              className="flex items-center gap-3 p-3 rounded-xl bg-background"
+            >
+              {editingId === category.id ? (
+                <>
+                  <input
+                    type="text"
+                    value={editingName}
+                    onChange={(e) => setEditingName(e.target.value)}
+                    className="flex-1 px-3 py-1.5 text-sm border border-border rounded-lg bg-surface focus:outline-none focus:ring-2 focus:ring-primary/20"
+                    autoFocus
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') handleUpdate(category.id);
+                      if (e.key === 'Escape') setEditingId(null);
+                    }}
+                  />
+                  <Button
+                    size="sm"
+                    onClick={() => handleUpdate(category.id)}
+                    disabled={updateCategoryMutation.isPending}
+                    className="rounded-full"
+                  >
+                    Sauver
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setEditingId(null)}
+                    className="rounded-full"
+                  >
+                    Annuler
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <span className="flex-1 font-medium">{category.name}</span>
+                  <span className="text-sm text-muted-foreground">
+                    {category._count?.services || 0} service{(category._count?.services || 0) > 1 ? 's' : ''}
+                  </span>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => startEditing(category)}
+                    className="rounded-full h-8 w-8 p-0"
+                  >
+                    <Edit2 className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => deleteCategoryMutation.mutate(category.id)}
+                    disabled={deleteCategoryMutation.isPending}
+                    className="rounded-full h-8 w-8 p-0 text-destructive hover:text-destructive"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </>
+              )}
+            </div>
+          ))}
+        </div>
+      ) : (
+        <p className="text-sm text-muted-foreground text-center py-4">
+          Aucune catégorie. Créez-en une pour organiser vos services.
+        </p>
+      )}
+    </div>
+  );
+}
+
+function DashboardServiceCard({ service, onDelete }: { service: BusinessService; onDelete: () => void }) {
   const [showMenu, setShowMenu] = useState(false);
 
   return (
@@ -543,7 +842,8 @@ function ServiceCard({ service, onDelete }: { service: BusinessService; onDelete
             <Clock className="w-3.5 h-3.5" />
             {service.durationMinutes} min
           </span>
-          {service.category && <span>{service.category.name}</span>}
+          {service.businessCategory && <span>{service.businessCategory.name}</span>}
+          {!service.businessCategory && service.category && <span>{service.category.name}</span>}
         </div>
       </div>
       <div className="relative">

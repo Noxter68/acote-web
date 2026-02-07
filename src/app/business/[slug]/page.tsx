@@ -27,6 +27,13 @@ import { formatPrice } from '@/lib/utils';
 import { BusinessService, Review, Booking } from '@/types';
 import { ReviewFormModal } from '@/components/reviews/review-form-modal';
 
+// Day names helper
+const DAY_NAMES = ['Dimanche', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'];
+
+function getDayName(dayOfWeek: number): string {
+  return DAY_NAMES[dayOfWeek] || '';
+}
+
 // Star rating component
 function StarRating({ score, size = 'sm' }: { score: number; size?: 'sm' | 'md' }) {
   const sizeClass = size === 'sm' ? 'w-3.5 h-3.5' : 'w-4 h-4';
@@ -42,6 +49,40 @@ function StarRating({ score, size = 'sm' }: { score: number; size?: 'sm' | 'md' 
         />
       ))}
     </div>
+  );
+}
+
+// Service card component for public page
+function ServiceCard({ service, onSelect }: { service: BusinessService; onSelect: (service: BusinessService) => void }) {
+  return (
+    <motion.button
+      onClick={() => onSelect(service)}
+      className="w-full text-left bg-surface border border-border rounded-2xl p-4 sm:p-5 transition-all hover:border-primary/50 hover:shadow-md cursor-pointer active:scale-[0.99]"
+      whileTap={{ scale: 0.99 }}
+    >
+      <div className="flex items-start sm:items-center justify-between gap-3">
+        <div className="flex-1 min-w-0">
+          <h3 className="font-medium text-base sm:text-lg mb-1 truncate pr-2">{service.name}</h3>
+          {service.description && (
+            <p className="text-sm text-muted-foreground mb-2 line-clamp-2">
+              {service.description}
+            </p>
+          )}
+          <div className="flex flex-wrap items-center gap-3 sm:gap-4 text-sm">
+            <span className="font-semibold text-primary text-base">
+              {formatPrice(service.priceCents)}
+            </span>
+            <span className="flex items-center gap-1.5 text-muted-foreground">
+              <Clock className="w-4 h-4" />
+              {service.durationMinutes} min
+            </span>
+          </div>
+        </div>
+        <div className="shrink-0 w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+          <ChevronRight className="w-5 h-5 text-primary" />
+        </div>
+      </div>
+    </motion.button>
   );
 }
 
@@ -169,109 +210,147 @@ export default function BusinessPublicPage() {
   const reviewCount = business.owner?.reputation?.ratingCount || 0;
 
   return (
-    <div className="min-h-screen bg-background -mt-20 pt-20 pb-24 lg:pb-12">
-      {/* Cover Image */}
-      <div className="relative h-40 sm:h-56 md:h-64 bg-linear-to-r from-primary to-primary-hover">
-        {business.coverUrl && (
-          <img
-            src={business.coverUrl}
-            alt=""
-            className="absolute inset-0 w-full h-full object-cover"
-          />
-        )}
-        <div className="absolute inset-0 bg-linear-to-t from-black/50 to-transparent" />
-      </div>
+    <div className="min-h-screen bg-background pb-24 lg:pb-12 pt-24">
+      {/* Business Header */}
+      <div className="container mx-auto px-4 sm:px-6 mb-8">
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex flex-col sm:flex-row items-start gap-5"
+        >
+          {/* Logo */}
+          <div className="w-20 h-20 sm:w-24 sm:h-24 bg-surface border border-border rounded-2xl shadow-sm flex items-center justify-center overflow-hidden shrink-0">
+            {business.logoUrl ? (
+              <img src={business.logoUrl} alt="" className="w-full h-full object-cover" />
+            ) : (
+              <span className="text-2xl sm:text-3xl font-bold text-primary">
+                {business.name[0]}
+              </span>
+            )}
+          </div>
 
-      <div className="container mx-auto px-4 sm:px-6">
-        {/* Header */}
-        <div className="relative -mt-12 sm:-mt-16 md:-mt-20 mb-6 sm:mb-8">
-          <div className="flex flex-col sm:flex-row gap-4 items-start">
-            {/* Logo */}
-            <div className="w-20 h-20 sm:w-28 sm:h-28 md:w-32 md:h-32 bg-surface border-4 border-background rounded-2xl shadow-lg flex items-center justify-center overflow-hidden shrink-0">
-              {business.logoUrl ? (
-                <img src={business.logoUrl} alt="" className="w-full h-full object-cover" />
-              ) : (
-                <span className="text-2xl sm:text-3xl font-bold text-primary">
-                  {business.name[0]}
+          {/* Business Info */}
+          <div className="flex-1 min-w-0">
+            <div className="flex flex-wrap items-center gap-2 mb-2">
+              <h1 className="text-2xl sm:text-3xl font-bold">{business.name}</h1>
+              {business.isVerified && (
+                <CheckCircle className="w-5 h-5 text-primary shrink-0" />
+              )}
+            </div>
+
+            <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground mb-3">
+              {business.city && (
+                <span className="flex items-center gap-1.5">
+                  <MapPin className="w-4 h-4" />
+                  {business.city}
+                </span>
+              )}
+              {avgRating && reviews && reviews.length > 0 && (
+                <span className="flex items-center gap-1.5">
+                  <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
+                  <span className="font-medium text-foreground">{avgRating}</span>
+                  <span>({reviews.length} avis)</span>
+                </span>
+              )}
+              {business.services && business.services.length > 0 && (
+                <span className="flex items-center gap-1.5">
+                  <Clock className="w-4 h-4" />
+                  {business.services.length} prestation{business.services.length > 1 ? 's' : ''}
                 </span>
               )}
             </div>
 
-            {/* Business Info */}
-            <div className="flex-1 pt-1 sm:pt-6 md:pt-8">
-              <div className="flex flex-wrap items-center gap-2 mb-2">
-                <h1 className="text-xl sm:text-2xl md:text-3xl font-bold">{business.name}</h1>
-                {business.isVerified && (
-                  <CheckCircle className="w-5 h-5 text-primary shrink-0" />
-                )}
-              </div>
-              <div className="flex flex-wrap items-center gap-3 sm:gap-4 text-sm text-muted-foreground">
-                {business.city && (
-                  <span className="flex items-center gap-1.5">
-                    <MapPin className="w-4 h-4 shrink-0" />
-                    <span className="truncate">{business.city}</span>
-                  </span>
-                )}
-                {avgRating && reviews && reviews.length > 0 && (
-                  <span className="flex items-center gap-1.5">
-                    <Star className="w-4 h-4 text-yellow-500 fill-yellow-500 shrink-0" />
-                    <span className="font-medium text-foreground">{avgRating}</span>
-                    <span className="text-muted-foreground">
-                      ({reviews.length} avis)
-                    </span>
-                  </span>
-                )}
-              </div>
+            {/* Description */}
+            {business.description && (
+              <p className="text-muted-foreground text-sm sm:text-base max-w-2xl leading-relaxed mb-4">
+                {business.description}
+              </p>
+            )}
+
+            {/* Contact Links */}
+            <div className="flex flex-wrap gap-2">
+              {business.phone && (
+                <a
+                  href={`tel:${business.phone}`}
+                  className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors bg-muted/50 hover:bg-muted px-3 py-1.5 rounded-lg"
+                >
+                  <Phone className="w-4 h-4" />
+                  <span className="hidden sm:inline">{business.phone}</span>
+                  <span className="sm:hidden">Appeler</span>
+                </a>
+              )}
+              {business.email && (
+                <a
+                  href={`mailto:${business.email}`}
+                  className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors bg-muted/50 hover:bg-muted px-3 py-1.5 rounded-lg"
+                >
+                  <Mail className="w-4 h-4" />
+                  <span className="hidden sm:inline">{business.email}</span>
+                  <span className="sm:hidden">Email</span>
+                </a>
+              )}
+              {business.website && (
+                <a
+                  href={business.website}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors bg-muted/50 hover:bg-muted px-3 py-1.5 rounded-lg"
+                >
+                  <Globe className="w-4 h-4" />
+                  Site web
+                </a>
+              )}
             </div>
           </div>
+        </motion.div>
+      </div>
 
-          {/* Description */}
-          {business.description && (
-            <p className="mt-4 text-muted-foreground text-sm sm:text-base max-w-2xl leading-relaxed">
-              {business.description}
-            </p>
-          )}
-
-          {/* Contact Info */}
-          <div className="flex flex-wrap gap-3 sm:gap-4 mt-4">
-            {business.phone && (
-              <a
-                href={`tel:${business.phone}`}
-                className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors bg-muted/50 hover:bg-muted px-3 py-2 rounded-lg"
-              >
-                <Phone className="w-4 h-4" />
-                <span className="hidden sm:inline">{business.phone}</span>
-                <span className="sm:hidden">Appeler</span>
-              </a>
-            )}
-            {business.email && (
-              <a
-                href={`mailto:${business.email}`}
-                className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors bg-muted/50 hover:bg-muted px-3 py-2 rounded-lg"
-              >
-                <Mail className="w-4 h-4" />
-                <span className="hidden sm:inline">{business.email}</span>
-                <span className="sm:hidden">Email</span>
-              </a>
-            )}
-            {business.website && (
-              <a
-                href={business.website}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors bg-muted/50 hover:bg-muted px-3 py-2 rounded-lg"
-              >
-                <Globe className="w-4 h-4" />
-                Site web
-              </a>
-            )}
-          </div>
-        </div>
+      <div className="container mx-auto px-4 sm:px-6">
+        {/* Team Section */}
+        {business.employees && business.employees.length > 0 && (
+          <section className="mb-8">
+            <h2 className="text-lg sm:text-xl font-bold mb-4">Notre équipe</h2>
+            <div className="flex gap-4 overflow-x-auto pb-2 -mx-4 px-4 sm:mx-0 sm:px-0 sm:grid sm:grid-cols-2 lg:grid-cols-4 sm:overflow-visible">
+              {business.employees.map((employee) => (
+                <motion.div
+                  key={employee.id}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="bg-surface border border-border rounded-2xl p-4 hover:border-primary/30 hover:shadow-md transition-all min-w-50 sm:min-w-0"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center shrink-0">
+                      {employee.avatarUrl ? (
+                        <img
+                          src={employee.avatarUrl}
+                          alt=""
+                          className="w-full h-full rounded-full object-cover"
+                        />
+                      ) : (
+                        <span className="text-sm font-semibold text-primary">
+                          {employee.firstName[0]}{employee.lastName[0]}
+                        </span>
+                      )}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <h3 className="font-medium text-sm truncate">
+                        {employee.firstName} {employee.lastName}
+                      </h3>
+                      {employee.role && (
+                        <p className="text-xs text-muted-foreground truncate">{employee.role}</p>
+                      )}
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          </section>
+        )}
 
         <div className="grid lg:grid-cols-3 gap-6 lg:gap-8">
           {/* Services List */}
           <div className="lg:col-span-2 space-y-6 sm:space-y-8">
-            {/* Services */}
+            {/* Services - Grouped by Category */}
             <section>
               <h2 className="text-lg sm:text-xl font-bold mb-4">Nos prestations</h2>
 
@@ -280,78 +359,68 @@ export default function BusinessPublicPage() {
                   <p className="text-muted-foreground">Aucune prestation disponible</p>
                 </div>
               ) : (
-                <div className="space-y-3">
-                  {business.services?.map((service) => (
-                    <motion.button
-                      key={service.id}
-                      onClick={() => handleServiceSelect(service)}
-                      className="w-full text-left bg-surface border border-border rounded-2xl p-4 sm:p-5 transition-all hover:border-primary/50 hover:shadow-md cursor-pointer active:scale-[0.99]"
-                      whileTap={{ scale: 0.99 }}
-                    >
-                      <div className="flex items-start sm:items-center justify-between gap-3">
-                        <div className="flex-1 min-w-0">
-                          <h3 className="font-medium text-base sm:text-lg mb-1 truncate pr-2">{service.name}</h3>
-                          {service.description && (
-                            <p className="text-sm text-muted-foreground mb-2 line-clamp-2">
-                              {service.description}
-                            </p>
-                          )}
-                          <div className="flex flex-wrap items-center gap-3 sm:gap-4 text-sm">
-                            <span className="font-semibold text-primary text-base">
-                              {formatPrice(service.priceCents)}
-                            </span>
-                            <span className="flex items-center gap-1.5 text-muted-foreground">
-                              <Clock className="w-4 h-4" />
-                              {service.durationMinutes} min
-                            </span>
+                <div className="space-y-6">
+                  {/* Group services by businessCategory */}
+                  {(() => {
+                    const services = business.services || [];
+                    const categories = business.categories || [];
+
+                    // Get services without a category
+                    const uncategorizedServices = services.filter(s => !s.businessCategoryId);
+
+                    // Get services grouped by category
+                    const categorizedGroups = categories
+                      .map(cat => ({
+                        category: cat,
+                        services: services.filter(s => s.businessCategoryId === cat.id),
+                      }))
+                      .filter(group => group.services.length > 0);
+
+                    return (
+                      <>
+                        {/* Categorized services */}
+                        {categorizedGroups.map(({ category, services: categoryServices }) => (
+                          <div key={category.id}>
+                            <h3 className="font-semibold text-base mb-3 text-muted-foreground uppercase tracking-wide">
+                              {category.name}
+                            </h3>
+                            <div className="space-y-3">
+                              {categoryServices.map((service) => (
+                                <ServiceCard
+                                  key={service.id}
+                                  service={service}
+                                  onSelect={handleServiceSelect}
+                                />
+                              ))}
+                            </div>
                           </div>
-                        </div>
-                        <div className="shrink-0 w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                          <ChevronRight className="w-5 h-5 text-primary" />
-                        </div>
-                      </div>
-                    </motion.button>
-                  ))}
+                        ))}
+
+                        {/* Uncategorized services */}
+                        {uncategorizedServices.length > 0 && (
+                          <div>
+                            {categorizedGroups.length > 0 && (
+                              <h3 className="font-semibold text-base mb-3 text-muted-foreground uppercase tracking-wide">
+                                Autres prestations
+                              </h3>
+                            )}
+                            <div className="space-y-3">
+                              {uncategorizedServices.map((service) => (
+                                <ServiceCard
+                                  key={service.id}
+                                  service={service}
+                                  onSelect={handleServiceSelect}
+                                />
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </>
+                    );
+                  })()}
                 </div>
               )}
             </section>
-
-            {/* Team Section */}
-            {business.employees && business.employees.length > 0 && (
-              <section>
-                <h2 className="text-lg sm:text-xl font-bold mb-4">Notre équipe</h2>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                  {business.employees.map((employee) => (
-                    <div
-                      key={employee.id}
-                      className="bg-surface border border-border rounded-2xl p-4 sm:p-5 flex items-center gap-4"
-                    >
-                      <div className="w-12 h-12 sm:w-14 sm:h-14 bg-primary/10 rounded-full flex items-center justify-center shrink-0">
-                        {employee.avatarUrl ? (
-                          <img
-                            src={employee.avatarUrl}
-                            alt=""
-                            className="w-full h-full rounded-full object-cover"
-                          />
-                        ) : (
-                          <span className="text-base sm:text-lg font-medium text-primary">
-                            {employee.firstName[0]}{employee.lastName[0]}
-                          </span>
-                        )}
-                      </div>
-                      <div className="min-w-0">
-                        <h3 className="font-medium truncate">
-                          {employee.firstName} {employee.lastName}
-                        </h3>
-                        {employee.role && (
-                          <p className="text-sm text-muted-foreground truncate">{employee.role}</p>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </section>
-            )}
 
             {/* Reviews Section - Mobile */}
             <section className="lg:hidden">
@@ -399,6 +468,41 @@ export default function BusinessPublicPage() {
               )}
             </section>
 
+            {/* Business Hours - Mobile only */}
+            {business.hours && business.hours.length > 0 && (
+              <section className="lg:hidden">
+                <h2 className="text-lg sm:text-xl font-bold mb-4">Horaires</h2>
+                <div className="bg-surface border border-border rounded-2xl p-4 sm:p-5">
+                  <div className="space-y-2">
+                    {[1, 2, 3, 4, 5, 6, 0].map((dayOfWeek) => {
+                      const dayHours = business.hours?.find((h) => h.dayOfWeek === dayOfWeek);
+                      const isToday = new Date().getDay() === dayOfWeek;
+
+                      return (
+                        <div
+                          key={dayOfWeek}
+                          className={`flex items-center justify-between text-sm py-1 ${
+                            isToday ? 'font-medium text-primary' : ''
+                          }`}
+                        >
+                          <span className={isToday ? 'font-semibold' : 'text-muted-foreground'}>
+                            {getDayName(dayOfWeek)}
+                          </span>
+                          <span className={dayHours?.isClosed ? 'text-muted-foreground' : ''}>
+                            {dayHours?.isClosed
+                              ? 'Fermé'
+                              : dayHours
+                              ? `${dayHours.startTime} - ${dayHours.endTime}`
+                              : 'Fermé'}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </section>
+            )}
+
             {/* Address - Mobile only */}
             {business.address && (
               <section className="lg:hidden">
@@ -438,6 +542,42 @@ export default function BusinessPublicPage() {
                   </Button>
                 )}
               </div>
+
+              {/* Business Hours Card */}
+              {business.hours && business.hours.length > 0 && (
+                <div className="bg-surface border border-border rounded-2xl p-6">
+                  <h3 className="font-bold mb-4 flex items-center gap-2">
+                    <Clock className="w-5 h-5" />
+                    Horaires
+                  </h3>
+                  <div className="space-y-2">
+                    {[1, 2, 3, 4, 5, 6, 0].map((dayOfWeek) => {
+                      const dayHours = business.hours?.find((h) => h.dayOfWeek === dayOfWeek);
+                      const isToday = new Date().getDay() === dayOfWeek;
+
+                      return (
+                        <div
+                          key={dayOfWeek}
+                          className={`flex items-center justify-between text-sm py-1 ${
+                            isToday ? 'font-medium text-primary' : ''
+                          }`}
+                        >
+                          <span className={isToday ? 'font-semibold' : 'text-muted-foreground'}>
+                            {getDayName(dayOfWeek)}
+                          </span>
+                          <span className={dayHours?.isClosed ? 'text-muted-foreground' : ''}>
+                            {dayHours?.isClosed
+                              ? 'Fermé'
+                              : dayHours
+                              ? `${dayHours.startTime} - ${dayHours.endTime}`
+                              : 'Fermé'}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
 
               {/* Reviews Card - Desktop */}
               <div className="bg-surface border border-border rounded-2xl p-6">
@@ -523,6 +663,7 @@ export default function BusinessPublicPage() {
             </div>
           </div>
         </div>
+
       </div>
 
       {/* Mobile Sticky CTA */}

@@ -222,6 +222,8 @@ export interface Business {
   };
   employees?: Employee[];
   services?: BusinessService[];
+  hours?: BusinessHours[];
+  categories?: BusinessCategory[];
   _count?: {
     employees: number;
     services: number;
@@ -238,6 +240,8 @@ export interface BusinessService {
   durationMinutes: number;
   categoryId?: string;
   category?: Category;
+  businessCategoryId?: string;
+  businessCategory?: BusinessCategory;
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
@@ -268,4 +272,25 @@ export interface EmployeeAvailability {
   dayOfWeek: number;
   startTime: string;
   endTime: string;
+}
+
+export interface BusinessHours {
+  id: string;
+  businessId: string;
+  dayOfWeek: number;
+  startTime: string;
+  endTime: string;
+  isClosed: boolean;
+}
+
+export interface BusinessCategory {
+  id: string;
+  businessId: string;
+  name: string;
+  sortOrder: number;
+  createdAt: string;
+  updatedAt: string;
+  _count?: {
+    services: number;
+  };
 }

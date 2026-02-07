@@ -24,15 +24,15 @@ export default function ProfilePage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-background -mt-20 pt-20">
-        <div className="h-48 bg-gradient-to-br from-primary/20 via-gold-soft to-primary/10" />
-        <div className="container mx-auto px-4 -mt-20">
+      <div className="min-h-screen bg-background">
+        <div className="bg-primary pt-28 pb-24 sm:pt-32 sm:pb-28" />
+        <div className="container mx-auto px-4 max-w-5xl -mt-20">
           <div className="animate-pulse">
-            <div className="flex flex-col md:flex-row gap-8">
-              <div className="w-40 h-40 rounded-2xl bg-surface border-4 border-background shadow-xl" />
+            <div className="flex flex-col md:flex-row items-center md:items-start gap-8">
+              <div className="w-28 h-28 md:w-36 md:h-36 rounded-2xl bg-white shadow-2xl" />
               <div className="flex-1 pt-4 space-y-3">
-                <div className="h-8 w-64 bg-muted rounded-xl" />
-                <div className="h-5 w-40 bg-muted rounded-lg" />
+                <div className="h-8 w-64 bg-muted rounded-xl mx-auto md:mx-0" />
+                <div className="h-5 w-40 bg-muted rounded-lg mx-auto md:mx-0" />
               </div>
             </div>
           </div>
@@ -84,36 +84,40 @@ export default function ProfilePage() {
   ];
 
   return (
-    <div className="min-h-screen bg-background -mt-20 pt-20">
+    <div className="min-h-screen bg-background">
       {/* Hero Header */}
-      <div className="h-48 md:h-56 bg-gradient-to-br from-primary/20 via-gold-soft to-primary/10 dark:from-primary/10 dark:via-surface-2 dark:to-primary/5" />
+      <div className="bg-primary pt-28 pb-24 sm:pt-32 sm:pb-28">
+        {/* Background Pattern */}
+        <div className="absolute inset-0 opacity-5">
+          <div className="absolute inset-0" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg width=\'60\' height=\'60\' viewBox=\'0 0 60 60\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cg fill=\'none\' fill-rule=\'evenodd\'%3E%3Cg fill=\'%23ffffff\' fill-opacity=\'1\'%3E%3Cpath d=\'M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z\'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")' }} />
+        </div>
+      </div>
 
-      <div className="container mx-auto px-4 max-w-5xl">
+      <div className="container mx-auto px-4 max-w-5xl -mt-20">
         {/* Profile Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="-mt-20 md:-mt-24"
         >
-          <div className="flex flex-col md:flex-row gap-6 md:gap-8">
+          <div className="flex flex-col md:flex-row items-center md:items-start gap-6 md:gap-8 text-center md:text-left">
             {/* Avatar */}
             <div className="relative">
               {user.profile?.avatarUrl ? (
                 <img
                   src={user.profile.avatarUrl}
                   alt=""
-                  className="w-32 h-32 md:w-40 md:h-40 rounded-2xl object-cover border-4 border-background shadow-xl bg-surface"
+                  className="w-28 h-28 md:w-36 md:h-36 rounded-2xl object-cover shadow-2xl bg-white ring-4 ring-white/20"
                 />
               ) : (
-                <div className="w-32 h-32 md:w-40 md:h-40 rounded-2xl border-4 border-background shadow-xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
+                <div className="w-28 h-28 md:w-36 md:h-36 rounded-2xl shadow-2xl bg-white ring-4 ring-white/20 flex items-center justify-center">
                   <span className="text-4xl md:text-5xl font-bold text-primary">
                     {(user.profile?.displayName || user.email)?.[0]?.toUpperCase()}
                   </span>
                 </div>
               )}
               {user.subscriptionStatus === 'PRO' && (
-                <div className="absolute -bottom-2 -right-2 bg-gold-gradient text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg flex items-center gap-1">
+                <div className="absolute -bottom-2 -right-2 bg-primary text-primary-foreground px-3 py-1 rounded-full text-xs font-bold shadow-lg flex items-center gap-1">
                   <Award className="w-3 h-3" />
                   PRO
                 </div>
@@ -121,12 +125,12 @@ export default function ProfilePage() {
             </div>
 
             {/* Info */}
-            <div className="flex-1 pt-2 md:pt-6">
+            <div className="flex-1 pt-2 md:pt-4">
               <h1 className="text-2xl md:text-3xl font-black">
                 {user.profile?.displayName || 'Utilisateur'}
               </h1>
 
-              <div className="flex flex-wrap items-center gap-4 mt-2 text-muted-foreground">
+              <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 mt-2 text-muted-foreground">
                 {user.profile?.city && (
                   <div className="flex items-center gap-1.5">
                     <MapPin className="w-4 h-4" />
@@ -189,7 +193,7 @@ export default function ProfilePage() {
                 initial={{ width: 0 }}
                 animate={{ width: `${xpProgress}%` }}
                 transition={{ duration: 1, delay: 0.5 }}
-                className="h-full bg-gold-gradient rounded-full"
+                className="h-full bg-primary rounded-full"
               />
             </div>
           </motion.div>
